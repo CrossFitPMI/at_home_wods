@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>At Home WODs — CrossFit PMI</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E8231A;
+    --dark: #0f0f0f;
+    --card: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #888;
+    --accent: #FFD000;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  header {
+    background: var(--red);
+    padding: 28px 20px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -45deg, transparent, transparent 10px,
+      rgba(0,0,0,0.07) 10px, rgba(0,0,0,0.07) 20px
+    );
+  }
+  header .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    position: relative;
+    margin-bottom: 8px;
+  }
+  header h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(44px, 12vw, 72px);
+    line-height: 0.9;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    color: #fff;
+    position: relative;
+  }
+  header h1 span { color: var(--accent); display: block; }
+  header .sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 10px;
+    position: relative;
+  }
+
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    background: #111;
+    border-bottom: 2px solid var(--border);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex: 0 0 auto;
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  .section { display: none; padding: 20px 16px 60px; max-width: 600px; margin: 0 auto; }
+  .section.active { display: block; }
+
+  .wod-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    animation: fadeUp 0.3s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .wod-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #222;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .wod-tag {
+    background: var(--red);
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .wod-tag.yellow { background: var(--accent); color: #000; }
+  .wod-tag.dark { background: #333; color: var(--text); }
+  .wod-tag.green { background: #1a7a3a; color: #fff; }
+
+  .wod-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+    flex: 1;
+  }
+  .wod-chevron {
+    color: var(--muted);
+    font-size: 18px;
+    transition: transform 0.25s;
+    flex-shrink: 0;
+  }
+  .wod-card.open .wod-chevron { transform: rotate(180deg); }
+
+  .wod-body { display: none; padding: 16px; }
+  .wod-card.open .wod-body { display: block; }
+
+  .movement {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .movement:last-of-type { border-bottom: none; }
+  .movement-reps {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--accent);
+    min-width: 56px;
+    line-height: 1;
+  }
+  .movement-name { font-size: 15px; color: var(--text); line-height: 1.3; }
+  .movement-name small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .note {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: rgba(255,208,0,0.07);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #ccc;
+    line-height: 1.5;
+  }
+
+  .rounds-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(232,35,26,0.15);
+    border: 1px solid rgba(232,35,26,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 14px;
+  }
+
+  .section-intro {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    background: var(--card);
+    border-radius: 8px;
+    border-left: 3px solid var(--red);
+  }
+
+  .divider-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 20px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .divider-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--red); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CrossFit PMI</div>
+  <h1>At Home<span>WODs</span></h1>
+  <div class="sub">No Gym · No Excuses · Just Work</div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('running')">🏃 Run-Based</button>
+  <button class="tab-btn" onclick="showTab('bodyweight')">💪 Bodyweight</button>
+  <button class="tab-btn" onclick="showTab('amrap')">🔁 AMRAP</button>
+  <button class="tab-btn" onclick="showTab('jump')">⏱ Jump Rope</button>
+  <button class="tab-btn" onclick="showTab('skill')">🤸 Skill</button>
+</div>
+
+<!-- ===== RUN-BASED ===== -->
+<div id="running" class="section active">
+  <div class="section-intro">Workouts built around running — mix of sprints, distance, and bodyweight combos.</div>
+
+  <div class="wod-card open">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">For Time</span>
+      <span class="wod-title">5K Run</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">5km</div><div class="movement-name">Run</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Mile & Push-Up Penalty</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">1 mi</div><div class="movement-name">Run<small>10 push-ups every minute that elapses</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Mile Lunge Run</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">1 mi</div><div class="movement-name">Run<small>30 step lunges every minute</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Double Mile Sandwich</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">1 mi</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">200</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">1 mi</div><div class="movement-name">Run</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">4-Run Gauntlet</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Sit-Ups</div></div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Run</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">3 rounds</span>
+      <span class="wod-title">800m Triple</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 3 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">800m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">3 rounds</span>
+      <span class="wod-title">Run & Back Extension</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 3 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">800m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Back Extensions<small>Also known as 'superman'</small></div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Sit-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">10 rounds</span>
+      <span class="wod-title">Sprint Walk</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 10 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">100m</div><div class="movement-name">Sprint</div></div>
+      <div class="movement"><div class="movement-reps">100m</div><div class="movement-name">Walk</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">10 rounds</span>
+      <span class="wod-title">Short Run Squats</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 10 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">100m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">20</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">8 rounds</span>
+      <span class="wod-title">Run & Squat Repeat</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 8 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">100m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">30</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">5 rounds</span>
+      <span class="wod-title">Short Run Combo</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 5 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">200m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Push-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">3 rounds</span>
+      <span class="wod-title">200m Push-Up Run</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 3 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">200m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">25</div><div class="movement-name">Push-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">10 rounds</span>
+      <span class="wod-title">Run & Push-Up</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 10 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">100m</div><div class="movement-name">Run</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">10 rounds</span>
+      <span class="wod-title">Burpee Run</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 10 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Burpees</div></div>
+      <div class="movement"><div class="movement-reps">100m</div><div class="movement-name">Run</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Push-Up Descending Run</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">60</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">40</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">800m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">20</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">1 mi</div><div class="movement-name">Run</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">800m Run + Squats & Sit-Ups</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">800m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Sit-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">800m Run + 100 Squats</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">800m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">800m</div><div class="movement-name">Run</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">1000m + Big Three</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">1000m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Push-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">4 rounds</span>
+      <span class="wod-title">400m + 50 Squats</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 4 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">3 rounds</span>
+      <span class="wod-title">400m Triple</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 3 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">25</div><div class="movement-name">Push-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">5 rounds</span>
+      <span class="wod-title">Run for Time</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 5 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">1 min</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">1 min</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BODYWEIGHT ===== -->
+<div id="bodyweight" class="section">
+  <div class="section-intro">Pure bodyweight — push-ups, squats, burpees, sit-ups. No equipment, no excuses.</div>
+
+  <div class="wod-card open">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">100 Push-Ups</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">100+</div><div class="movement-name">Push-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Big Three</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Sit-Ups</div></div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">3 rounds</span>
+      <span class="wod-title">30-40-50</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 3 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">30</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">40</div><div class="movement-name">Sit-Ups</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">10 rounds</span>
+      <span class="wod-title">Classic Triplet</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 10 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Squats</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Tuck Jumps</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">6 rounds</span>
+      <span class="wod-title">10-10-10</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 6 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Sit-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">3 rounds</span>
+      <span class="wod-title">Simple Triplet</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 3 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Sit-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">20 rounds</span>
+      <span class="wod-title">5-5-5</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 20 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">5</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">5</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">5</div><div class="movement-name">Sit-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">4 rounds</span>
+      <span class="wod-title">Tuck Jump Triplet</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 4 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Tuck Jumps</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Sit-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">5 rounds</span>
+      <span class="wod-title">Broad Jump Combo</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 5 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">3</div><div class="movement-name">Tuck Jumps</div></div>
+      <div class="movement"><div class="movement-reps">3</div><div class="movement-name">Squats</div></div>
+      <div class="movement"><div class="movement-reps">3</div><div class="movement-name">Broad Jumps</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Burpee Challenge</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">50–200</div><div class="movement-name">Burpees<small>Pick your number</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Air Squat Challenge</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">100–500</div><div class="movement-name">Air Squats<small>Pick your number</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">The Big Four</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">75</div><div class="movement-name">Sit-Ups</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Box Jumps<small>Can jump onto a bench, step, etc.</small></div></div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Run</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Descending Push-Up Squat</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">21</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">42</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">15</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">30</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">9</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">18</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">21-15-9</span>
+      <span class="wod-title">Squats & Push-Ups</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 21-15-9 For Time</div>
+      <div class="movement"><div class="movement-reps">21→9</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">21→9</div><div class="movement-name">Push-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Chair Dip Ladder</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">30</div><div class="movement-name">Chair Dips</div></div>
+      <div class="movement"><div class="movement-reps">75</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">20</div><div class="movement-name">Chair Dips</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Chair Dips</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Jumping Jacks to Burpees</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Jumping Jacks</div></div>
+      <div class="movement"><div class="movement-reps">75</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">25</div><div class="movement-name">Burpees</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">7 rounds</span>
+      <span class="wod-title">7 & 7</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 7 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">7</div><div class="movement-name">Air Squats</div></div>
+      <div class="movement"><div class="movement-reps">7</div><div class="movement-name">Burpees</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">8 rounds</span>
+      <span class="wod-title">Situp Burpee</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 8 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Sit-Ups</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Burpees</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Lunge Challenge</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Walking Lunges</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Lunge Run Lunge</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Walking Lunges</div></div>
+      <div class="movement"><div class="movement-reps">800m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Walking Lunges</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Long Lunge</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">250+</div><div class="movement-name">Walking Lunges<small>Scale as needed</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">3 rounds</span>
+      <span class="wod-title">Jumping Jack Burpee</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 3 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">20</div><div class="movement-name">Jumping Jacks</div></div>
+      <div class="movement"><div class="movement-reps">20</div><div class="movement-name">Burpees</div></div>
+      <div class="movement"><div class="movement-reps">20</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Pyramid Grind</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">30</div><div class="movement-name">Handstand Push-Ups<small>Sub: 30-60s handstand hold or push-ups</small></div></div>
+      <div class="movement"><div class="movement-reps">40</div><div class="movement-name">Jump Squats</div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Sit-Ups</div></div>
+      <div class="movement"><div class="movement-reps">60</div><div class="movement-name">Squats</div></div>
+      <div class="movement"><div class="movement-reps">70</div><div class="movement-name">Double Unders<small>Sub: jump rope or jumping jacks</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Descending Wave</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time — Cycle through all three</div>
+      <div class="movement"><div class="movement-reps">80→20</div><div class="movement-name">Air Squats<small>80, 60, 40, 20 reps</small></div></div>
+      <div class="movement"><div class="movement-reps">40→10</div><div class="movement-name">Sit-Ups<small>40, 30, 20, 10 reps</small></div></div>
+      <div class="movement"><div class="movement-reps">20→5</div><div class="movement-name">Handstand Push-Ups<small>20, 15, 10, 5 reps</small></div></div>
+      <div class="note">Complete 80 air squats, 40 sit-ups, 20 HSPU, then cycle back through the decreasing reps.</div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">10 rounds</span>
+      <span class="wod-title">10 Rounds Walking Lunges</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 10 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Walking Lunges</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Push-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag dark">10→1</span>
+      <span class="wod-title">Descending Burpees</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 10-9-8...1 For Time</div>
+      <div class="movement"><div class="movement-reps">10→1</div><div class="movement-name">Burpees</div></div>
+      <div class="movement"><div class="movement-reps">10→1</div><div class="movement-name">Sit-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag dark">10→1</span>
+      <span class="wod-title">Triple Descending</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 10-9-8...1 For Time</div>
+      <div class="movement"><div class="movement-reps">10→1</div><div class="movement-name">Burpees</div></div>
+      <div class="movement"><div class="movement-reps">10→1</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">10→1</div><div class="movement-name">Sit-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag dark">10→1</span>
+      <span class="wod-title">Sit-Up Sprints</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 10-9-8...1 For Time</div>
+      <div class="movement"><div class="movement-reps">10→1</div><div class="movement-name">Sit-Ups</div></div>
+      <div class="note">100m sprint between each set.</div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">5 rounds</span>
+      <span class="wod-title">Squats with Rest</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 5 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Air Squats<small>Rest 1:1 ratio per round</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag dark">Bench</span>
+      <span class="wod-title">Bench AMRAP</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 20 Min AMRAP</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Bench Dips</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Box Jumps<small>Can jump onto a bench, step, etc.</small></div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Walking Lunges</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AMRAP ===== -->
+<div id="amrap" class="section">
+  <div class="section-intro">As Many Rounds As Possible — set the clock and go until it beeps.</div>
+
+  <div class="wod-card open">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag green">20 min</span>
+      <span class="wod-title">Run & Pull-Up AMRAP</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ AMRAP 20 Minutes</div>
+      <div class="movement"><div class="movement-reps">400m</div><div class="movement-name">Run</div></div>
+      <div class="movement"><div class="movement-reps">Max</div><div class="movement-name">Pull-Ups<small>Sub: Push-Ups</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag green">20 min</span>
+      <span class="wod-title">Cindy</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ AMRAP 20 Minutes</div>
+      <div class="movement"><div class="movement-reps">5</div><div class="movement-name">Push-Ups</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Sit-Ups</div></div>
+      <div class="movement"><div class="movement-reps">15</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag green">20 min</span>
+      <span class="wod-title">HSPU & Pistols AMRAP</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ AMRAP 20 Minutes</div>
+      <div class="movement"><div class="movement-reps">5</div><div class="movement-name">Handstand Push-Ups<small>Sub: 30-60s handstand hold or push-ups</small></div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Pistols (Single Leg Squats)<small>Sub: 20 Air Squats</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag dark">Tabata</span>
+      <span class="wod-title">Tabata Air Squats</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 8 Rounds Tabata</div>
+      <div class="movement"><div class="movement-reps">20s on</div><div class="movement-name">Air Squats (or any movement from this list)</div></div>
+      <div class="movement"><div class="movement-reps">10s off</div><div class="movement-name">Rest</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== JUMP ROPE ===== -->
+<div id="jump" class="section">
+  <div class="section-intro">Double-unders, jump rope, or jumping jacks — all interchangeable. Pick what you have.</div>
+
+  <div class="wod-card open">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">5 rounds</span>
+      <span class="wod-title">Double Under Squats</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 5 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">100</div><div class="movement-name">Double Unders<small>Sub: jumping jacks</small></div></div>
+      <div class="movement"><div class="movement-reps">50</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">250 Double Unders</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">250</div><div class="movement-name">Double Unders<small>Sub: regular jump rope or jumping jacks</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">Annie</span>
+      <span class="wod-title">50-40-30-20-10</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 50-40-30-20-10 For Time</div>
+      <div class="movement"><div class="movement-reps">50→10</div><div class="movement-name">Double Unders<small>Sub: jump rope or jumping jacks</small></div></div>
+      <div class="movement"><div class="movement-reps">50→10</div><div class="movement-name">Sit-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Jump Rope & Push-Ups</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 50-40-30-20-10 For Time</div>
+      <div class="movement"><div class="movement-reps">50→10</div><div class="movement-name">Jump Rope</div></div>
+      <div class="movement"><div class="movement-reps">50→10</div><div class="movement-name">Push-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">For Time</span>
+      <span class="wod-title">Descending Double Under Sit-Up</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ For Time</div>
+      <div class="movement"><div class="movement-reps">2 min</div><div class="movement-name">Max Double Unders<small>Sub: jump rope or jumping jacks</small></div></div>
+      <div class="movement"><div class="movement-reps">2 min</div><div class="movement-name">Max Sit-Ups</div></div>
+      <div class="movement"><div class="movement-reps">1 min</div><div class="movement-name">Rest</div></div>
+      <div class="movement"><div class="movement-reps">90s</div><div class="movement-name">Max Double Unders</div></div>
+      <div class="movement"><div class="movement-reps">90s</div><div class="movement-name">Max Sit-Ups</div></div>
+      <div class="movement"><div class="movement-reps">1 min</div><div class="movement-name">Rest</div></div>
+      <div class="movement"><div class="movement-reps">60s</div><div class="movement-name">Max Double Unders</div></div>
+      <div class="movement"><div class="movement-reps">60s</div><div class="movement-name">Max Sit-Ups</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SKILL ===== -->
+<div id="skill" class="section">
+  <div class="section-intro">Handstand work, pistols, and gymnastic movements. Great for building body control and strength.</div>
+
+  <div class="wod-card open">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag dark">Skill</span>
+      <span class="wod-title">Handstand Hold 5 Min</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ Accumulate 5 Minutes</div>
+      <div class="movement"><div class="movement-reps">5 min</div><div class="movement-name">Handstand Hold<small>Rest as needed</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">5 rounds</span>
+      <span class="wod-title">Handstand + Squat Hold</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 5 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">1 min</div><div class="movement-name">Handstand Hold</div></div>
+      <div class="movement"><div class="movement-reps">1 min</div><div class="movement-name">Bottom of Squat Hold</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">8 rounds</span>
+      <span class="wod-title">Handstand + Squats</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 8 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">30s</div><div class="movement-name">Handstand Hold</div></div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">5 rounds</span>
+      <span class="wod-title">Handstand Hold + Squats</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 5 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">30s</div><div class="movement-name">Handstand Hold</div></div>
+      <div class="movement"><div class="movement-reps">20</div><div class="movement-name">Air Squats</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">21-15-9</span>
+      <span class="wod-title">Lunges & HSPU</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 21-15-9 For Time</div>
+      <div class="movement"><div class="movement-reps">21→9</div><div class="movement-name">Walking Lunges (each leg)</div></div>
+      <div class="movement"><div class="movement-reps">21→9</div><div class="movement-name">Handstand Push-Ups<small>Sub: 30-60s handstand hold or push-ups</small></div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag yellow">21-15-9</span>
+      <span class="wod-title">HSPU, Chair Dips & Push-Ups</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 21-15-9 For Time</div>
+      <div class="movement"><div class="movement-reps">21→9</div><div class="movement-name">Handstand Push-Ups<small>Sub: 30-60s handstand hold</small></div></div>
+      <div class="movement"><div class="movement-reps">21→9</div><div class="movement-name">Chair Dips</div></div>
+      <div class="movement"><div class="movement-reps">21→9</div><div class="movement-name">Push-Ups</div></div>
+    </div>
+  </div>
+
+  <div class="wod-card">
+    <div class="wod-header" onclick="toggleCard(this)">
+      <span class="wod-tag">3 rounds</span>
+      <span class="wod-title">HSPU Run</span>
+      <span class="wod-chevron">▾</span>
+    </div>
+    <div class="wod-body">
+      <div class="rounds-badge">⏱ 3 Rounds for Time</div>
+      <div class="movement"><div class="movement-reps">10</div><div class="movement-name">Handstand Push-Ups<small>Sub: 30-60s handstand hold or push-ups</small></div></div>
+      <div class="movement"><div class="movement-reps">200m</div><div class="movement-name">Run</div></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="mailto:crossfitpmi@gmail.com">crossfitpmi@gmail.com</a> &nbsp;·&nbsp; <a href="http://www.crossfitpmi.com">crossfitpmi.com</a>
+</footer>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggleCard(header) {
+    header.closest('.wod-card').classList.toggle('open');
+  }
+</script>
+</body>
+</html>
